@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/gosnmp/gosnmp"
 	"github.com/pkg/errors"
-	"gitlab.tools.vipshop.com/terry.zeng/snmpmonitor/g"
-	"gitlab.tools.vipshop.com/terry.zeng/snmpmonitor/send"
+	"github.com/signmem/snmpmonitor/g"
+	"github.com/signmem/snmpmonitor/send"
 	"strings"
 	"time"
 )

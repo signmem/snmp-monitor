@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"gitlab.tools.vipshop.com/terry.zeng/snmpmonitor/g"
+	"github.com/signmem/snmpmonitor/g"
 	"net/http"
 	"errors"
 )

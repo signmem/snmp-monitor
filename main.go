@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gitlab.tools.vipshop.com/terry.zeng/snmpmonitor/g"
-	"gitlab.tools.vipshop.com/terry.zeng/snmpmonitor/http"
-	"gitlab.tools.vipshop.com/terry.zeng/snmpmonitor/monitor"
+	"github.com/signmem/snmpmonitor/g"
+	"github.com/signmem/snmpmonitor/http"
+	"github.com/signmem/snmpmonitor/monitor"
 	"os"
 )
 

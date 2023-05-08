@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 	"encoding/json"
-	"gitlab.tools.vipshop.com/terry.zeng/snmpmonitor/tools"
+	"github.com/signmem/snmpmonitor/tools"
 )
 
 var (

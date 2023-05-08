@@ -4,7 +4,7 @@ package http
 import (
 	"net/http"
 	"encoding/json"
-	"gitlab.tools.vipshop.com/terry.zeng/snmpmonitor/g"
+	"github.com/signmem/snmpmonitor/g"
 )
 
 func init() {
