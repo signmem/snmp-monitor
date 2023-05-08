@@ -1,0 +1,28 @@
+[Unit]
+Description=vip-snmp-monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=apps
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=snmp-monitor
+ExecStart=/apps/svr/snmp-monitor/snmp-monitor -c /apps/conf/snmp-monitor/cfg.json
+ExecStop=/bin/kill -9 $MAINPID
+ExecReload=/bin/kill -s HUP $MAINPID
+KillSignal=KillSignal
+TimeoutStopSec=60
+RestartSec=30
+TimeoutSec=300
+KillMode=process
+PrivateTmp=false
+Restart=on-failure
+CPUShares=2
+MemoryLimit=2G
+BlockIOWeight=100
+CPUQuota=100%
+
+[Install]
+WantedBy=multi-user.target
