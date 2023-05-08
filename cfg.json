@@ -1,0 +1,81 @@
+{
+    "debug":false,
+    "logfile": "/apps/conf/snmp-monitor/snmp-monitor.log",
+    "logmaxage": 432000,
+    "logrotateage": 86400,
+    "step": 60,
+    "upload": false,
+    "listen": "0.0.0.0:22233",
+    "uploadurl": "http://127.0.0.1:22230/v1/push",
+    "snmpserver": [""],
+    "oids": [
+	{
+		"oid": "1.3.6.1.2.1.1.3.0",
+		"alias": "sysUpTimeInstance",
+		"type": "GAUGE"
+	},
+	{
+		"oid": "1.3.6.1.2.1.2.1.0",
+		"alias": "ifNumber.0",
+		"type": "GAUGE"
+	},
+	{
+		"oid": "1.3.6.1.2.1.25.1.1.0",
+		"alias":"hrSystemUptime.0",
+		"type": "GAUGE"
+	},
+	{
+		"oid":"1.3.6.1.4.1.2021.4.5.0",
+		"alias":"memTotalReal.0",
+		"type": "GAUGE"
+	},
+	{
+		"oid":"1.3.6.1.4.1.2021.4.6.0",
+		"alias":"memAvailReal.0",
+		"type": "GAUGE"
+	},
+	{
+		"oid":"1.3.6.1.4.1.2021.11.11.0",
+		"alias":"ssCpuIdle.0",
+		"type": "GAUGE"
+	}
+    ],
+    "oidwalks": [
+        {
+	"tagoid" : "1.3.6.1.2.1.2.2.1.2",
+	"tagname": "iface=",
+	"check": [
+		{  
+		    "oid": "1.3.6.1.2.1.2.2.1.11",
+		    "alias": "net.if.in.multicast",
+		    "type": "COUNTER"
+		},
+		{  
+		    "oid": "1.3.6.1.2.1.2.2.1.10",
+		    "alias": "net.if.in.bytes",
+		    "type": "COUNTER"
+		},
+		{  
+		    "oid": "1.3.6.1.2.1.2.2.1.13",
+		    "alias": "net.if.in.dropped",
+		    "type": "COUNTER"
+		},
+		{  
+		    "oid": "1.3.6.1.2.1.2.2.1.17",
+		    "alias": "net.if.out.multicast",
+		    "type": "COUNTER"
+		},
+		{  
+		    "oid": "1.3.6.1.2.1.2.2.1.16",
+		    "alias": "net.if.out.bytes",
+		    "type": "COUNTER"
+		},
+		{  
+		    "oid": "1.3.6.1.2.1.2.2.1.19",
+		    "alias": "net.if.out.dropped",
+		    "type": "COUNTER"
+		}
+	  ]
+       }
+    ]
+}
