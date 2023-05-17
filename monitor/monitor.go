@@ -10,17 +10,40 @@ import (
 	"time"
 )
 
+var ServerTotalList map[string]int
+
 func GlobalStart() {
 
 	tempStep := g.Config().Step
-
 	sleepTime := int(tempStep)
+	servers := g.Config().SnmpServer
+	ServerTotalList = make(map[string]int)
+
+
+	for _, server := range servers {
+		ServerTotalList[server] = 0
+	}
 
 	for {
-		servers := g.Config().SnmpServer
 
-		for _, server := range servers {
-			snmapProgram(server)
+		for addr, time := range ServerTotalList {
+			var metricsValue int64
+
+			if time == 0 {
+				err := snmapProgram(addr)
+
+				if err != nil {
+					metricsValue = 0
+					ServerTotalList[addr] = g.Config().SkipTime
+				} else {
+					metricsValue = 1
+				}
+
+			} else {
+				ServerTotalList[addr] = time - 1
+			}
+
+			send.GenSnmpMetricAlive(addr, metricsValue)
 		}
 
 		time.Sleep(time.Second * time.Duration(sleepTime))
@@ -30,14 +53,18 @@ func GlobalStart() {
 
 
 
-func snmapProgram(address string) {
+func snmapProgram(address string) (err error){
 
 	TOTALMETRICS = TOTALMETRICS[:0]
 
 	// 遍历 cfg 配置中 oids 
 	oidsmap := g.Config().Oids
 	for _, idsGroup := range oidsmap {
-		snmpGet(address, "", idsGroup)
+		err := snmpGet(address, "", idsGroup)
+		if err != nil {
+
+			return err
+		}
 	}
 	// 变量完成
 
@@ -101,13 +128,14 @@ func snmapProgram(address string) {
 		OIDWALKTAG = OIDWALKTAG[:0]
 		TOTALMETRICS = TOTALMETRICS[:0]
 	}
+	return nil
 }
 
 
 func snmpGet(address string, tagName string, idsGroup g.OIDMAP) (err error) {
 
 	gosnmp.Default.Target = address
-	gosnmp.Default.Timeout = time.Duration(10 * time.Second)
+	gosnmp.Default.Timeout = time.Duration(3 * time.Second)
 	err = gosnmp.Default.Connect()
 
 	if err != nil {

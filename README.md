@@ -4,22 +4,6 @@
 
 # cfg 说明  
 
-> 简单说明   
-
-```
-    "debug":false,               // 打印 metric 信息到日志  
-    "logfile": "/apps/conf/snmp-monitor/snmp-monitor.log",
-    "logmaxage": 432000,
-    "logrotateage": 86400,
-    "step": 60,                 // 监控时间间隔  
-    "upload": false,            // true 则 upload 至 falcon agent  
-    "listen": "0.0.0.0:22233",  // 用于 http://0.0.0.0:22233/health_check 检测  
-    "uploadurl": "http://127.0.0.1:22230/v1/push",  // falcon-agent 上传 metrics 接口  
-    "snmpserver": [""],        // 需要执行监控的服务器地址
-
-```
-
-
 > 独立 get 方法  
 
 ```

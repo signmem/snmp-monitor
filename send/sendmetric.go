@@ -7,7 +7,22 @@ import (
 	"github.com/signmem/snmpmonitor/g"
 	"net/http"
 	"errors"
+	"time"
 )
+
+func GenSnmpMetricAlive(address string, value int64) (err error) {
+	var metrics MetricValue
+	var sendMetrics []MetricValue
+
+	metrics.Type = "GAUGE"
+	metrics.Step = g.Config().Step
+	metrics.Timestamp = time.Now().Unix()
+	metrics.Metric = "snmpd.alive"
+	metrics.Endpoint = address
+	metrics.Value = value
+	sendMetrics = append(sendMetrics, metrics)
+	return UploadMetric(sendMetrics)
+}
 
 func UploadMetric(metrics []MetricValue) (err error) {
 

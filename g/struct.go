@@ -9,6 +9,7 @@ type GlobalConfig struct {
 	OidWalks		[]OidWalk	`json:"oidwalks"`
 	SnmpServer 		[]string 	`json:"snmpserver"`
 	Step 			int64 		`json:"step"`
+	SkipTime		int			`json:"skiptime"`
 	UploadUrl		string		`json:"uploadurl"`
 	Upload			bool		`json:"upload"`
 	Listen			string		`json:"listen"`
