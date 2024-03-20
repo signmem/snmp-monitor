@@ -1,7 +1,7 @@
 package monitor
 
 import (
-	"github.com/signmem/snmpmonitor/send"
+	"github.com/signmem/snmp-monitor/send"
 )
 
 type OidStruct struct {

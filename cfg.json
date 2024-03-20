@@ -4,10 +4,19 @@
     "logmaxage": 432000,
     "logrotateage": 86400,
     "step": 60,
-    "upload": false,
+    "localendpoint": true,
     "listen": "0.0.0.0:22233",
     "uploadurl": "http://127.0.0.1:22230/v1/push",
-    "snmpserver": ["10.199.215.221","10.189.20.49"],
+    "snmpserver": [
+		{
+			"ipaddr": "10.199.215.221",
+			"hostname": "hostname1"
+		}，
+		{	
+			"ipaddr": "10.189.20.49",
+			"hostname": "hostname2"
+		}
+	],
     "oids": [
 	{
 		"oid": "1.3.6.1.2.1.1.3.0",

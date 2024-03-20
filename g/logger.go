@@ -4,13 +4,26 @@ import (
 	"fmt"
 	"github.com/lestrrat/go-file-rotatelogs"
 	"github.com/coreos/go-log/log"
+	"os"
 	"time"
 )
 
 var (
 	Logger *log.Logger
 	Ipaddr string
+	SnmpServerDict []SnmpServers
 )
+
+
+func GetHostname(ipaddr string) (hostname string) {
+	for _, info := range SnmpServerDict {
+		if ipaddr == info.IPAddr {
+			return info.HostName
+		}
+	}
+	hostname, _ = os.Hostname()
+	return
+}
 
 func InitLog() *log.Logger {
 	LogMaxAge := Config().LogMaxAge

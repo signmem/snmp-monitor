@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/gosnmp/gosnmp"
 	"github.com/pkg/errors"
-	"github.com/signmem/snmpmonitor/g"
-	"github.com/signmem/snmpmonitor/send"
+	"github.com/signmem/snmp-monitor/g"
+	"github.com/signmem/snmp-monitor/send"
+	"log"
+	"os"
 	"strings"
 	"time"
 )
@@ -16,9 +18,18 @@ func GlobalStart() {
 
 	tempStep := g.Config().Step
 	sleepTime := int(tempStep)
-	servers := g.Config().SnmpServer
+	g.SnmpServerDict = g.Config().SnmpServer
 	ServerTotalList = make(map[string]int)
 
+	if len(g.SnmpServerDict) == 0 {
+		log.Fatalf("can not find any server in config file.")
+		os.Exit(1)
+	}
+
+	var servers []string
+	for _, snmpList := range g.SnmpServerDict {
+		servers = append(servers, snmpList.IPAddr)
+	}
 
 	for _, server := range servers {
 		ServerTotalList[server] = 0
@@ -55,19 +66,19 @@ func GlobalStart() {
 
 func snmapProgram(address string) (err error){
 
+	// use to clean up TOTALMETRICS
 	TOTALMETRICS = TOTALMETRICS[:0]
 
-	// 遍历 cfg 配置中 oids 
+	// range oids in cfg file
+	// TERRY
 	oidsmap := g.Config().Oids
+
 	for _, idsGroup := range oidsmap {
 		err := snmpGet(address, "", idsGroup)
 		if err != nil {
-
 			return err
 		}
 	}
-	// 变量完成
-
 
 	// runing walk
 
@@ -80,7 +91,6 @@ func snmapProgram(address string) (err error){
 		// 通过 walk 获取当前监控个数并创建新 tag
 		walkMakeTag(address, oidWalkMap.TagOid)
 		// get OIDWALKTAG
-
 
 		// 读取 cfg check 配置 (后面用于遍历的 oid)
 		oidWalkCheck := oidWalkMap.Check
@@ -102,6 +112,7 @@ func snmapProgram(address string) (err error){
 					// regroup walkOidMap
 					walkCheckOid := walkCheck.OID + "." + num
 
+					// TERRY
 					walkOidMap.OID =  walkCheckOid
 					walkOidMap.Alias = walkCheck.Alias
 					walkOidMap.Type = walkCheck.Type
@@ -135,7 +146,7 @@ func snmapProgram(address string) (err error){
 func snmpGet(address string, tagName string, idsGroup g.OIDMAP) (err error) {
 
 	gosnmp.Default.Target = address
-	gosnmp.Default.Timeout = time.Duration(3 * time.Second)
+	gosnmp.Default.Timeout = time.Duration(10 * time.Second)
 	err = gosnmp.Default.Connect()
 
 	if err != nil {
@@ -147,15 +158,14 @@ func snmpGet(address string, tagName string, idsGroup g.OIDMAP) (err error) {
 
 	var metrics send.MetricValue
 
-	metrics.Endpoint = address
-	metrics.Timestamp = time.Now().Unix()
-	metrics.Step = g.Config().Step
-
-	metrics.Type = idsGroup.Type
+	metrics.Endpoint = g.GetHostname(address)
 
 	if len(tagName) != 0 {
 		metrics.Tags = tagName
 	}
+
+	metrics.Timestamp = time.Now().Unix()
+	metrics.Step = g.Config().Step
 
 	var idsmap []string
 	idsmap = append(idsmap, idsGroup.OID)
@@ -173,11 +183,12 @@ func snmpGet(address string, tagName string, idsGroup g.OIDMAP) (err error) {
 		// g.Logger.Infof("oid: %s, nmae: %s", variables.Name, idsDetail.Name)
 
 		metrics.Metric = idsGroup.Alias
+		metrics.Type = idsGroup.Type
 
 		switch variables.Type {
 
 		case gosnmp.OctetString:
-			g.Logger.Infof("string: %d", string(variables.Value.([]byte)))
+			g.Logger.Infof("string: %v", string(variables.Value.([]byte)))
 		default:
 			// g.Logger.Infof("num: %d", gosnmp.ToBigInt(variables.Value))
 			value := gosnmp.ToBigInt(variables.Value).Int64()

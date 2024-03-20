@@ -1,6 +1,7 @@
 # snmp monitor  
 
 > 用于 snmp 监控   
+> go version 1.20 about
 
 # cfg 说明  
 

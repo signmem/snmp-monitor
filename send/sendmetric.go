@@ -3,10 +3,10 @@ package send
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"github.com/signmem/snmpmonitor/g"
-	"net/http"
 	"errors"
+	"fmt"
+	"github.com/signmem/snmp-monitor/g"
+	"net/http"
 	"time"
 )
 
@@ -18,7 +18,9 @@ func GenSnmpMetricAlive(address string, value int64) (err error) {
 	metrics.Step = g.Config().Step
 	metrics.Timestamp = time.Now().Unix()
 	metrics.Metric = "snmpd.alive"
-	metrics.Endpoint = address
+
+	metrics.Endpoint = 	g.GetHostname(address)
+
 	metrics.Value = value
 	sendMetrics = append(sendMetrics, metrics)
 	return UploadMetric(sendMetrics)
