@@ -7,17 +7,20 @@ import (
 	"github.com/signmem/snmp-monitor/g"
 	"github.com/signmem/snmp-monitor/send"
 	"log"
+	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
 
-var ServerTotalList map[string]int
+var (
+	ServerTotalList map[string]int
+	GRAP  = int64(rand.Intn(100))
+)
 
 func GlobalStart() {
 
-	tempStep := g.Config().Step
-	sleepTime := int(tempStep)
 	g.SnmpServerDict = g.Config().SnmpServer
 	ServerTotalList = make(map[string]int)
 
@@ -36,28 +39,30 @@ func GlobalStart() {
 	}
 
 	for {
+		if time.Now().Unix() % g.Config().Step == 0 {
 
-		for addr, time := range ServerTotalList {
-			var metricsValue int64
+			for addr, time := range ServerTotalList {
+				var metricsValue int64
 
-			if time == 0 {
-				err := snmapProgram(addr)
+				if time == 0 {
+					err := snmapProgram(addr)
 
-				if err != nil {
-					metricsValue = 0
-					ServerTotalList[addr] = g.Config().SkipTime
+					if err != nil {
+						metricsValue = 0
+						ServerTotalList[addr] = g.Config().SkipTime
+					} else {
+						metricsValue = 1
+					}
+
 				} else {
-					metricsValue = 1
+					ServerTotalList[addr] = time - 1
 				}
 
-			} else {
-				ServerTotalList[addr] = time - 1
+				send.GenSnmpMetricAlive(addr, metricsValue)
 			}
-
-			send.GenSnmpMetricAlive(addr, metricsValue)
 		}
 
-		time.Sleep(time.Second * time.Duration(sleepTime))
+		time.Sleep(time.Second * time.Duration(1))
 	}
 
 }
@@ -124,8 +129,10 @@ func snmapProgram(address string) (err error){
 			}
 		}
 
+		g.Logger.Debugf("server: %s, metric total len: %d", address, len(TOTALMETRICS))
+
 		if g.Config().Debug {
-			g.Logger.Debugf("server: %s, metric total len: %d", address, len(TOTALMETRICS))
+
 			for _, metric := range TOTALMETRICS {
 				g.Logger.Debug(metric.String())
 			}
@@ -188,7 +195,9 @@ func snmpGet(address string, tagName string, idsGroup g.OIDMAP) (err error) {
 		switch variables.Type {
 
 		case gosnmp.OctetString:
-			g.Logger.Infof("string: %v", string(variables.Value.([]byte)))
+			// g.Logger.Infof("string: %v", string(variables.Value.([]byte)))
+			valueString := string(variables.Value.([]byte))
+			metrics.Value, _ = strconv.ParseFloat(valueString, 64)
 		default:
 			// g.Logger.Infof("num: %d", gosnmp.ToBigInt(variables.Value))
 			value := gosnmp.ToBigInt(variables.Value).Int64()
