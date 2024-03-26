@@ -11,6 +11,14 @@ import (
 )
 
 func GenSnmpMetricAlive(address string, value int64) (err error) {
+
+	var newhost string
+	for _, dict := range g.SnmpServerDict {
+		if dict.IPAddr == address {
+			dict.HostName = newhost
+		}
+	}
+
 	var metrics MetricValue
 	var sendMetrics []MetricValue
 
@@ -18,10 +26,12 @@ func GenSnmpMetricAlive(address string, value int64) (err error) {
 	metrics.Step = g.Config().Step
 	metrics.Timestamp = time.Now().Unix()
 	metrics.Metric = "snmpd.alive"
-
-	metrics.Endpoint = 	g.GetHostname(address)
-
+	metrics.Endpoint = newhost
 	metrics.Value = value
+
+	sendMetrics = append(sendMetrics, metrics)
+
+	metrics.Metric = "agent.alive"
 	sendMetrics = append(sendMetrics, metrics)
 	return UploadMetric(sendMetrics)
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/signmem/snmp-monitor/g"
 	"github.com/signmem/snmp-monitor/send"
 	"log"
-	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -16,7 +15,6 @@ import (
 
 var (
 	ServerTotalList map[string]int
-	GRAP  = int64(rand.Intn(100))
 )
 
 func GlobalStart() {
@@ -52,13 +50,12 @@ func GlobalStart() {
 						ServerTotalList[addr] = g.Config().SkipTime
 					} else {
 						metricsValue = 1
+						send.GenSnmpMetricAlive(addr, metricsValue)
 					}
 
 				} else {
 					ServerTotalList[addr] = time - 1
 				}
-
-				send.GenSnmpMetricAlive(addr, metricsValue)
 			}
 		}
 
@@ -66,7 +63,6 @@ func GlobalStart() {
 	}
 
 }
-
 
 
 func snmapProgram(address string) (err error){
