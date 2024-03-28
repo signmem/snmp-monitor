@@ -10,12 +10,12 @@ import (
 	"time"
 )
 
-func GenSnmpMetricAlive(address string, value int64) (err error) {
+func GenSnmpMetricAlive(address string, value float64) (err error) {
 
 	var newhost string
 	for _, dict := range g.SnmpServerDict {
 		if dict.IPAddr == address {
-			dict.HostName = newhost
+			newhost = dict.HostName
 		}
 	}
 
@@ -33,7 +33,13 @@ func GenSnmpMetricAlive(address string, value int64) (err error) {
 
 	metrics.Metric = "agent.alive"
 	sendMetrics = append(sendMetrics, metrics)
-	return UploadMetric(sendMetrics)
+
+	err = UploadMetric(sendMetrics)
+
+	if err != nil {
+		g.Logger.Errorf("upload err:%s", err)
+	}
+	return nil
 }
 
 func UploadMetric(metrics []MetricValue) (err error) {
