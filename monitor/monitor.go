@@ -10,47 +10,25 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
 
 func GlobalStart() {
 
-	g.SnmpServerDict = g.Config().SnmpServer
+	snmpServerDict := g.Config().SnmpServer
+
 	// 没有配置服务器则退出
-	if len(g.SnmpServerDict) == 0 {
-		log.Fatalf("can not find any server in config file.")
+	if len(snmpServerDict.IPAddr) == 0 || len(snmpServerDict.HostName) == 0 {
+		log.Fatalf("can not find server in config file.")
 		os.Exit(1)
 	}
 
-	var servers []string
-	for _, snmpList := range g.SnmpServerDict {
-		servers = append(servers, snmpList.IPAddr)
-	}
-
-	// 支持最大 10 并发
-	task_chan := make(chan bool, 10)
-	wg := sync.WaitGroup{}
-	defer close(task_chan)
-
-	// do snmp check program
-
 	for {
+		
 		if time.Now().Unix() % g.Config().Step == 0 {
-
-			for _, addr := range servers {
-
-				wg.Add(1)
-				task_chan <- true
-				go func(addr string) {
-					<-task_chan
-					// 主入口
-					runSnmapCheck(addr)
-					defer wg.Done()
-				}(addr)
-			}
-			wg.Wait()
+			// 主入口
+		 	runSnmapCheck(snmpServerDict)
 		}
 
 		time.Sleep(time.Second * time.Duration(1))
@@ -58,10 +36,10 @@ func GlobalStart() {
 
 }
 
-func runSnmapCheck(addr string) {
+func runSnmapCheck(snmpServerDict g.SnmpServers) {
 
 	var metricsValue float64
-	err := snmapProgram(addr)
+	err := snmapProgram(snmpServerDict)
 
 	if err != nil {
 		return
@@ -69,11 +47,11 @@ func runSnmapCheck(addr string) {
 
 	metricsValue = 1
 	// 监控成功，则上报 falcon agent.alive = 1
-	send.GenSnmpMetricAlive(addr, metricsValue)
+	send.GenSnmpMetricAlive(snmpServerDict, metricsValue)
 	return
 }
 
-func snmapProgram(address string) (err error){
+func snmapProgram(SnmpServerDict g.SnmpServers) (err error){
 
 	// totalSnmpMetric 私有变量
 	var totalSnmpMetric []send.MetricValue
@@ -84,7 +62,7 @@ func snmapProgram(address string) (err error){
 	for _, idsGroup := range oidsmap {
 
 		// fix get metrics from global variable to private variable
-		snmpGetMetrics, err := snmpGet(address, "", idsGroup)
+		snmpGetMetrics, err := snmpGet(SnmpServerDict, "", idsGroup)
 
 		if err != nil {
 			continue
@@ -101,10 +79,10 @@ func snmapProgram(address string) (err error){
 
 		// 通过 walk 获取当前监控个数并创建新 tag
 		//var oidWalkTag []OidStruct
-		oidWalkTag, err := walkMakeTag(address, oidWalkMap.TagOid)
+		oidWalkTag, err := walkMakeTag(SnmpServerDict.IPAddr, oidWalkMap.TagOid)
 
 		if err != nil {
-			g.Logger.Errorf("spip check %s, oid %s", address, oidWalkMap.TagOid)
+			g.Logger.Errorf("spip check %s, oid %s", SnmpServerDict.IPAddr, oidWalkMap.TagOid)
 			continue
 		}
 
@@ -133,7 +111,12 @@ func snmapProgram(address string) (err error){
 					walkOidMap.Type = walkCheck.Type
 
 					// 利用重组的 oid map 进行 snmpget 操作
-					snmpMetrics, _ := snmpGet(address, tagFull, walkOidMap)
+					snmpMetrics, err := snmpGet(SnmpServerDict, tagFull, walkOidMap)
+
+					if err != nil {
+						continue
+					}
+
 					totalSnmpMetric = append(totalSnmpMetric, snmpMetrics...)
 				}
 
@@ -145,7 +128,7 @@ func snmapProgram(address string) (err error){
 			return errmsg
 		}
 
-		g.Logger.Debugf("server: %s, metric total len: %d", address, len(totalSnmpMetric))
+		g.Logger.Debugf("server: %s, metric total len: %d", SnmpServerDict.IPAddr, len(totalSnmpMetric))
 
 		if g.Config().Debug {
 			for _, metric := range totalSnmpMetric {
@@ -162,14 +145,14 @@ func snmapProgram(address string) (err error){
 }
 
 
-func snmpGet(address string, tagName string, idsGroup g.OIDMAP) (snmpMetrics []send.MetricValue, err error) {
+func snmpGet(SnmpServerDict g.SnmpServers, tagName string, idsGroup g.OIDMAP) (snmpMetrics []send.MetricValue, err error) {
 
-	gosnmp.Default.Target = address
-	gosnmp.Default.Timeout = time.Duration(3 * time.Second)
+	gosnmp.Default.Target = SnmpServerDict.IPAddr
+	gosnmp.Default.Timeout = time.Duration(10 * time.Second)
 	err = gosnmp.Default.Connect()
 
 	if err != nil {
-		g.Logger.Errorf("snmp connect error:%s", err)
+		g.Logger.Errorf("snmp get connect error:%s", err)
 		return snmpMetrics, err
 	}
 
@@ -177,7 +160,7 @@ func snmpGet(address string, tagName string, idsGroup g.OIDMAP) (snmpMetrics []s
 
 	var metrics send.MetricValue
 
-	metrics.Endpoint = g.GetHostname(address)
+	metrics.Endpoint = SnmpServerDict.HostName
 
 	if len(tagName) != 0 {
 		metrics.Tags = tagName
@@ -218,21 +201,19 @@ func snmpGet(address string, tagName string, idsGroup g.OIDMAP) (snmpMetrics []s
 
 		snmpMetrics = append(snmpMetrics, metrics)
 	}
-
+	time.Sleep(time.Millisecond * 200 )
 	return snmpMetrics,nil
 }
-
-
 
 
 func walkMakeTag(address string, oids string) (oidwalktag []OidStruct, err error) {
 
 	gosnmp.Default.Target = address
-	gosnmp.Default.Timeout = time.Duration(3 * time.Second)
+	gosnmp.Default.Timeout = time.Duration(10 * time.Second)
 	err = gosnmp.Default.Connect()
 
 	if err != nil {
-		g.Logger.Errorf("snmp connect error:%s", err)
+		g.Logger.Errorf("snmp walk connect error:%s", err)
 		return oidwalktag, err
 	}
 

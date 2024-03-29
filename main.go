@@ -7,6 +7,7 @@ import (
 	"github.com/signmem/snmp-monitor/http"
 	"github.com/signmem/snmp-monitor/monitor"
 	"os"
+	_ "net/http/pprof"
 )
 
 func main() {

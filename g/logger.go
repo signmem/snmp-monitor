@@ -2,28 +2,14 @@ package g
 
 import (
 	"fmt"
-	"github.com/lestrrat/go-file-rotatelogs"
 	"github.com/coreos/go-log/log"
-	"os"
+	"github.com/lestrrat/go-file-rotatelogs"
 	"time"
 )
 
 var (
 	Logger *log.Logger
-	Ipaddr string
-	SnmpServerDict []SnmpServers
 )
-
-
-func GetHostname(ipaddr string) (hostname string) {
-	for _, info := range SnmpServerDict {
-		if ipaddr == info.IPAddr {
-			return info.HostName
-		}
-	}
-	hostname, _ = os.Hostname()
-	return
-}
 
 func InitLog() *log.Logger {
 	LogMaxAge := Config().LogMaxAge
@@ -37,7 +23,7 @@ func InitLog() *log.Logger {
 	)
 
 	if err != nil {
-		panic(fmt.Errorf("error opening file: %v", err))
+		log.Panicf("can not open file. err:%s\n", err)
 	}
 
 	Logger := log.NewSimple(

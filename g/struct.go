@@ -7,7 +7,7 @@ type GlobalConfig struct {
 	LogRotateAge	int			`json:"logrotateage"`
 	Oids	 		[]OIDMAP	`json:"oids"`
 	OidWalks		[]OidWalk	`json:"oidwalks"`
-	SnmpServer 		[]SnmpServers 	`json:"snmpserver"`
+	SnmpServer 		SnmpServers `json:"snmpserver"`
 	Step 			int64 		`json:"step"`
 	SkipTime		int			`json:"skiptime"`
 	UploadUrl		string		`json:"uploadurl"`

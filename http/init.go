@@ -59,7 +59,7 @@ func Start() {
 }
 
 func healthCheck() {
-	http.HandleFunc("/health_check",
+	http.HandleFunc("/_health_check",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("ok"))
 		})

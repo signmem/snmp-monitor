@@ -10,14 +10,7 @@ import (
 	"time"
 )
 
-func GenSnmpMetricAlive(address string, value float64) (err error) {
-
-	var newhost string
-	for _, dict := range g.SnmpServerDict {
-		if dict.IPAddr == address {
-			newhost = dict.HostName
-		}
-	}
+func GenSnmpMetricAlive(snmpServerDict g.SnmpServers, value float64) (err error) {
 
 	var metrics MetricValue
 	var sendMetrics []MetricValue
@@ -26,7 +19,7 @@ func GenSnmpMetricAlive(address string, value float64) (err error) {
 	metrics.Step = g.Config().Step
 	metrics.Timestamp = time.Now().Unix()
 	metrics.Metric = "snmpd.alive"
-	metrics.Endpoint = newhost
+	metrics.Endpoint = snmpServerDict.HostName
 	metrics.Value = value
 
 	sendMetrics = append(sendMetrics, metrics)

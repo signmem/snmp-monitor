@@ -1,11 +1,12 @@
-# snmp monitor  
+# snmp monitor   
 
-> 用于 snmp 监控   
-> go version 1.20 about
+> 用于 snmp 监控    
+> go version 1.20 about  
+> 不支持同时监控多个 snmp 服务器 (udp 协议，无法保证数据返回一致性)    
 
-# cfg 说明  
+# cfg 说明   
 
-> 独立 get 方法  
+> 独立 get 方法   
 
 ```
     "oids": [            <- 使用 get 方式
